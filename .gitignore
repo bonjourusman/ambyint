@@ -5,3 +5,6 @@ QA/
 UI/
 UX/
 UX-UI/
+
+__pycache__/
+*.pyc
