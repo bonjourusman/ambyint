@@ -1,0 +1,146 @@
+Training set shape: (32151, 103),
+Validation set shape: (8038, 103)
+
+Class distribution in training set:
+
+Class 0: 29040 samples
+Class 1: 3111 samples
+Imbalance ratio: 9.33:1
+Calculated class weights: {0: 0.5535640495867769, 1: 5.167309546769528}
+
+================================================================================
+TRAINING WITH SAMPLING STRATEGY: Original
+================================================================================
+
+Tuning hyperparameters for XGBoost with Original...
+XGBoost - Best Parameters: {'learning_rate': 0.05, 'max_depth': 5, 'n_estimators': 100, 'scale_pos_weight': 1, 'subsample': 0.9}
+XGBoost - Best CV F1-Score: 0.9733
+XGBoost - Valid Accuracy: 0.9751
+XGBoost - Valid Balanced Accuracy: 0.8703
+XGBoost - Valid Precision: 0.9965
+XGBoost - Valid Recall: 0.7408
+XGBoost - Valid F1-Score: 0.9751
+XGBoost - Valid AUC: 0.9925
+XGBoost - Valid Avg Precision: 0.9622
+XGBoost - CV F1-Score: 0.9733 (+/- 0.0020)
+
+Tuning hyperparameters for Random Forest with Original...
+Random Forest - Best Parameters: {'class_weight': {0: 0.5535640495867769, 1: 5.167309546769528}, 'max_depth': 10, 'min_samples_leaf': 2, 'min_samples_split': 5, 'n_estimators': 100}
+Random Forest - Best CV F1-Score: 0.9810
+Random Forest - Valid Accuracy: 0.9827
+Random Forest - Valid Balanced Accuracy: 0.9272
+Random Forest - Valid Precision: 0.9549
+Random Forest - Valid Recall: 0.8586
+Random Forest - Valid F1-Score: 0.9827
+Random Forest - Valid AUC: 0.9928
+Random Forest - Valid Avg Precision: 0.9632
+Random Forest - CV F1-Score: 0.9810 (+/- 0.0023)
+
+================================================================================
+TRAINING WITH SAMPLING STRATEGY: SMOTE
+================================================================================
+After SMOTE:
+Class 0: 29040 samples
+Class 1: 29040 samples
+
+Tuning hyperparameters for XGBoost with SMOTE...
+XGBoost - Best Parameters: {'learning_rate': 0.05, 'max_depth': 5, 'n_estimators': 100, 'scale_pos_weight': 1, 'subsample': 0.9}
+XGBoost - Best CV F1-Score: 0.9675
+XGBoost - Valid Accuracy: 0.9736
+XGBoost - Valid Balanced Accuracy: 0.9368
+XGBoost - Valid Precision: 0.8407
+XGBoost - Valid Recall: 0.8914
+XGBoost - Valid F1-Score: 0.9736
+XGBoost - Valid AUC: 0.9900
+XGBoost - Valid Avg Precision: 0.9475
+XGBoost - CV F1-Score: 0.9675 (+/- 0.0018)
+
+Tuning hyperparameters for Random Forest with SMOTE...
+Random Forest - Best Parameters: {'class_weight': None, 'max_depth': 10, 'min_samples_leaf': 2, 'min_samples_split': 5, 'n_estimators': 100}
+Random Forest - Best CV F1-Score: 0.9737
+Random Forest - Valid Accuracy: 0.9784
+Random Forest - Valid Balanced Accuracy: 0.9306
+Random Forest - Valid Precision: 0.8976
+Random Forest - Valid Recall: 0.8717
+Random Forest - Valid F1-Score: 0.9784
+Random Forest - Valid AUC: 0.9887
+Random Forest - Valid Avg Precision: 0.9460
+Random Forest - CV F1-Score: 0.9737 (+/- 0.0022)
+
+================================================================================
+TRAINING WITH SAMPLING STRATEGY: RandomOverSampler
+================================================================================
+After RandomOverSampler:
+Class 0: 29040 samples
+Class 1: 29040 samples
+
+Tuning hyperparameters for XGBoost with RandomOverSampler...
+XGBoost - Best Parameters: {'learning_rate': 0.05, 'max_depth': 5, 'n_estimators': 100, 'scale_pos_weight': 1, 'subsample': 0.9}
+XGBoost - Best CV F1-Score: 0.9780
+XGBoost - Valid Accuracy: 0.9726
+XGBoost - Valid Balanced Accuracy: 0.9503
+XGBoost - Valid Precision: 0.8141
+XGBoost - Valid Recall: 0.9228
+XGBoost - Valid F1-Score: 0.9726
+XGBoost - Valid AUC: 0.9914
+XGBoost - Valid Avg Precision: 0.9572
+XGBoost - CV F1-Score: 0.9780 (+/- 0.0015)
+
+Tuning hyperparameters for Random Forest with RandomOverSampler...
+Random Forest - Best Parameters: {'class_weight': None, 'max_depth': 10, 'min_samples_leaf': 2, 'min_samples_split': 5, 'n_estimators': 100}
+Random Forest - Best CV F1-Score: 0.9902
+Random Forest - Valid Accuracy: 0.9835
+Random Forest - Valid Balanced Accuracy: 0.9487
+Random Forest - Valid Precision: 0.9190
+Random Forest - Valid Recall: 0.9058
+Random Forest - Valid F1-Score: 0.9835
+Random Forest - Valid AUC: 0.9942
+Random Forest - Valid Avg Precision: 0.9678
+Random Forest - CV F1-Score: 0.9902 (+/- 0.0015)
+
+========================================================================================================================
+COMPREHENSIVE MODEL PERFORMANCE SUMMARY (SORTED BY F1-SCORE)
+========================================================================================================================
+    		Model          		Sampling  	Accuracy  Balanced_Acc  	Precision   	Recall  		F1-Score      	AUC  	Avg_Precision  	CV_F1_Mean  	CV_F1_Std
+Random Forest  RandomOverSampler 		0.983454      0.948687   		0.918991 	0.905759  	0.983454 	0.994242       	0.967756    	0.990203   		0.000725
+Random Forest          		Original  		0.982707      0.927188   		0.954876 	0.858639  	0.982707 	0.992804       	0.963181    	0.981027   		0.001152
+Random Forest             		SMOTE		0.978353      0.930640   		0.897574 	0.871728  	0.978353 	0.988654       	0.945960    	0.973726   		0.001112
+      	XGBoost          		Original  		0.975118      0.870281   		0.996479 	0.740838  	0.975118 		0.992474       	0.962151    	0.973345   		0.000986
+      	XGBoost             		SMOTE  		0.973625      0.936813  		 0.840741 	0.891361  	0.973625 	0.989992       	0.947519    	0.967528   		0.000908
+     	XGBoost    RandomOverSampler  		0.972630      0.950321   		0.814088 	0.922775  	0.972630 	0.991419       	0.957210    	0.978013   		0.000756
+
+================================================================================
+BEST PERFORMING MODEL DETAILS
+================================================================================
+Model: Random Forest
+Sampling Strategy: RandomOverSampler
+F1-Score: 0.9835
+Accuracy: 0.9835
+Balanced Accuracy: 0.9487
+Precision: 0.9190
+Recall: 0.9058
+AUC: 0.9942
+Average Precision: 0.9678
+CV F1-Score: 0.9902 (+/- 0.0015)
+Best parameters: {'class_weight': None, 'max_depth': 10, 'min_samples_leaf': 2, 'min_samples_split': 5, 'n_estimators': 100}
+
+================================================================================
+TOP 5 MODELS COMPARISON
+================================================================================
+        	Model         		Sampling  	F1-Score  	Precision		Recall      	AUC  	Balanced_Acc
+Random Forest   RandomOverSampler  	0.983454   	0.918991 	0.905759 	0.994242     	0.948687
+Random Forest          		Original  		0.982707   	0.954876 	0.858639 	0.992804      	0.927188
+Random Forest            		SMOTE  		0.978353   	0.897574 	0.871728 	0.988654     	0.930640
+      	XGBoost          		Original  		0.975118  	0.996479 	0.740838 	0.992474      	0.870281
+      	XGBoost             		SMOTE  		0.973625   	0.840741 	0.891361 	0.989992      	0.936813
+
+================================================================================
+PERFORMANCE BY SAMPLING STRATEGY
+================================================================================
+                   	F1-Score_mean  	F1-Score_max  	Precision_mean 	 Precision_max  	Recall_mean	Recall_max  	AUC_mean  	AUC_max
+Sampling                                                                                                                 
+Original                  		0.9789        	0.9827          		0.9757         		0.9965       		0.7997      0.8586    	0.9926   		0.9928
+RandomOverSampler     0.9780        	0.9835          		0.8665         		0.9190       		0.9143      0.9228    	0.9928   		0.9942
+SMOTE                     	0.9760        	0.9784          		0.8692         		0.8976       		0.8815      0.8914    	0.9893   		0.9900
+
+

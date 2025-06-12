@@ -16,6 +16,8 @@ from imblearn.over_sampling import SMOTE, ADASYN, RandomOverSampler
 from imblearn.combine import SMOTETomek, SMOTEENN
 from sklearn.utils.class_weight import compute_class_weight
 import pickle
+import warnings
+warnings.filterwarnings('ignore')
 
 df = pd.read_csv('dataset/train.csv', parse_dates=['Timestamp'])
 
@@ -42,7 +44,7 @@ df = df.drop(columns=['Well_ID'])
 #print(df.head(),'\n')
 #print(df.tail(),'\n')
 
-selected_features = ['Timestamp']
+selected_cols = ['Timestamp']
 
 # CATEGORICAL FEATURE ANALYSIS:
 # -----------------------------
@@ -57,6 +59,8 @@ selected_features = ['Timestamp']
 
 # 'Monitoring_Alert' only gets triggered when the Operating Status is 'Operating'. It would make sense to ignore the other operating statuses (i.e. Maintenance, Standby, Startup) for the purpose of predictive modeling and to prevent bias:
 df1 = df[df['Well_Operating_Status'] == 'Operating'].copy()
+
+df1.sort_values(by='Timestamp', inplace=True)
 
 # Feature 2: Operational_Notes
 
@@ -87,7 +91,7 @@ df1 = df[df['Well_Operating_Status'] == 'Operating'].copy()
 #print(df1.groupby('Maintenance_Code')['Monitoring_Alert'].value_counts(), '\n')
 
 # 'Maintenance_Code' may be useful for predicting 'Monitoring_Alert', though more domain specific analysis is needed to confirm its significance and how it is derived:
-selected_features.append('Maintenance_Code')
+selected_cols.append('Maintenance_Code')
 
 # Response: Monitoring_Alert
 
@@ -145,6 +149,7 @@ plt.close()
 
 # Next, generate a heatmap to visualize the correlation among quantitative features
 quant_features = df1.select_dtypes(include=['float64', 'int64']).columns
+
 '''
 plt.figure(figsize=(12, 10))
 sns.heatmap(df1[quant_features].corr(), 
@@ -157,18 +162,20 @@ plt.savefig('plots/heatmap_correlation_analysis.png', dpi=300, bbox_inches='tigh
 plt.close()
 '''
 # 'Casing_Pressure_psi' and 'Casing_Pressure_SensorB_psi' have a strong positive correlation of 0.8, indicating potential redundancy. We'll ignore one of these for modeling:
-selected_features += [f for f in quant_features if f != 'Casing_Pressure_SensorB_psi']
-#print(f"Selected features for modeling: {selected_features}")
+quant_features_selected = [f for f in quant_features if f != 'Casing_Pressure_SensorB_psi']
+
+# Fill null values of selected quantitative features using average of previous 3 and next 3 observations:
+df1[quant_features_selected] = df1[quant_features_selected].fillna(df1[quant_features_selected].rolling(window=7, min_periods=1, center=True).mean())
+
+selected_cols += quant_features_selected
+#print(f"Selected columns: {selected_cols}")
 
 ###################################################
 # Data Prep for Model Training
 ###################################################
 
-df_modeling = df1[selected_features].copy()
-df_modeling['Monitoring_Alert'] = df1['Monitoring_Alert'].copy()
-
-# Make sure the data is in chronological order
-df_modeling.sort_values(by='Timestamp', inplace=True)
+df_modeling = df1[selected_cols].copy()
+df_modeling['Monitoring_Alert'] = df1['Monitoring_Alert'].copy() # add response column
 
 # Define periods to capture temporal effect for each observation
 NUM_LAG_PERIODS = 3
@@ -544,9 +551,11 @@ df_test['Maintenance_Code'] = df_test['Maintenance_Code'].astype(str)
 
 df_test1 = df_test[df_test['Well_Operating_Status'] == 'Operating'].copy()
 
-df_test2 = df_test1[selected_features].copy()
+df_test1.sort_values(by='Timestamp', inplace=True)
 
-df_test2.sort_values(by='Timestamp', inplace=True)
+df_test1[quant_features_selected] = df_test1[quant_features_selected].fillna(df_test1[quant_features_selected].rolling(window=7, min_periods=1, center=True).mean())
+
+df_test2 = df_test1[selected_cols].copy()
 
 df_test2 = add_lag_and_delta_features(df_test2, NUM_LAG_PERIODS, NUM_DELTA_PERIODS)
 
@@ -572,7 +581,7 @@ df_test_results = pd.concat([df_test2, pd.Series(y_test, name='Predicted_Monitor
 # Join the test results with raw test data on Timestamp column
 df_final_results = pd.merge(df_test, df_test_results, on='Timestamp', how='left')
 
-# For rows with Operating Status != Operational & those skipped because of lag/delta, manually set predictions to 0
+# For rows with Operating Status != Operational & those excluded because of min lag/delta periods, manually set predictions to 0
 df_final_results['Predicted_Monitoring_Alert'] = df_final_results['Predicted_Monitoring_Alert'].fillna(0)
 
 # Final formatting
