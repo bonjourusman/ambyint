@@ -8,128 +8,78 @@ Weekly Optimization Simulation: 2023-08-23 to 2023-10-19
 
 Week 1 Analysis (995 records)
   VFD Analysis: Current=75.0%, Optimal Range=56.8%-87.2%, Center=72.0%
-  VFD Increase Test: +0.01% improvement
-  VFD Decrease Test: +0.01% improvement
-  VFD Center Optimization: +0.01% improvement
 Production: 96.72 m³/d (-0.1% vs baseline)
-Equipment Health: 84.8/100
-Recommendations:
- [MEDIUM] Equipment health: 84.8/100 - Monitor closely
- Best Opportunity: VFD Increase Test
- Expected Gain: +0.0%
- Recommendation: AVOID
+Equipment Health: 91.5/100
 
 Week 2 Analysis (995 records)
   VFD Analysis: Current=75.2%, Optimal Range=56.8%-87.2%, Center=72.0%
-  VFD Increase Test: -0.03% improvement
-  VFD Decrease Test: -0.04% improvement
-  VFD Center Optimization: -0.04% improvement
 Production: 96.51 m³/d (-0.3% vs baseline)
-Equipment Health: 82.1/100
-Recommendations:
- [MEDIUM] Equipment health: 82.1/100 - Monitor closely
- Best Opportunity: VFD Increase Test
- Expected Gain: +-0.0%
- Recommendation: AVOID
+Equipment Health: 89.3/100
 
 Week 3 Analysis (995 records)
   VFD Analysis: Current=73.0%, Optimal Range=56.8%-87.2%, Center=72.0%
-  VFD Increase Test: +0.02% improvement
-  VFD Decrease Test: +0.03% improvement
-  VFD Center Optimization: +0.02% improvement
 Production: 93.86 m³/d (-3.1% vs baseline)
-Equipment Health: 81.2/100
+Equipment Health: 87.6/100
 Recommendations:
- [HIGH] Equipment health: 81.2/100 - Schedule inspection
- Best Opportunity: VFD Decrease Test
- Expected Gain: +0.0%
- Recommendation: AVOID
+ [MEDIUM] Equipment health: 87.6/100 - Monitor closely
 
 Week 4 Analysis (995 records)
   VFD Analysis: Current=75.1%, Optimal Range=56.8%-87.2%, Center=72.0%
-  VFD Increase Test: +0.02% improvement
-  VFD Decrease Test: +0.02% improvement
-  VFD Center Optimization: +0.02% improvement
 Production: 96.37 m³/d (-0.5% vs baseline)
-Equipment Health: 82.3/100
+Equipment Health: 87.4/100
 Recommendations:
- [MEDIUM] Equipment health: 82.3/100 - Monitor closely
- Best Opportunity: VFD Center Optimization
- Expected Gain: +0.0%
- Recommendation: AVOID
+ [MEDIUM] Equipment health: 87.4/100 - Monitor closely
 
 Week 5 Analysis (995 records)
   VFD Analysis: Current=74.9%, Optimal Range=56.8%-87.2%, Center=72.0%
-  VFD Increase Test: +0.02% improvement
-  VFD Decrease Test: +0.02% improvement
-  VFD Center Optimization: +0.02% improvement
 Production: 96.41 m³/d (-0.5% vs baseline)
-Equipment Health: 80.9/100
+Equipment Health: 88.3/100
 Recommendations:
- [HIGH] Equipment health: 80.9/100 - Schedule inspection
- Best Opportunity: VFD Center Optimization
- Expected Gain: +0.0%
- Recommendation: AVOID
+ [MEDIUM] Equipment health: 88.3/100 - Monitor closely
 
 Week 6 Analysis (995 records)
   VFD Analysis: Current=75.0%, Optimal Range=56.8%-87.2%, Center=72.0%
-  VFD Increase Test: +0.04% improvement
-  VFD Decrease Test: +0.04% improvement
-  VFD Center Optimization: +0.04% improvement
 Production: 96.24 m³/d (-0.6% vs baseline)
-Equipment Health: 80.0/100
+Equipment Health: 88.7/100
 Recommendations:
- [HIGH] Equipment health: 80.0/100 - Schedule inspection
- Best Opportunity: VFD Increase Test
- Expected Gain: +0.0%
- Recommendation: AVOID
+ [MEDIUM] Equipment health: 88.7/100 - Monitor closely
 
 Week 7 Analysis (995 records)
   VFD Analysis: Current=74.8%, Optimal Range=56.8%-87.2%, Center=72.0%
-  VFD Increase Test: +0.05% improvement
-  VFD Decrease Test: +0.04% improvement
-  VFD Center Optimization: +0.04% improvement
 Production: 96.03 m³/d (-0.8% vs baseline)
-Equipment Health: 77.2/100
+Equipment Health: 87.8/100
 Recommendations:
- [HIGH] Equipment health: 77.2/100 - Schedule inspection
- Best Opportunity: VFD Increase Test
- Expected Gain: +0.0%
- Recommendation: AVOID
+ [MEDIUM] Equipment health: 87.8/100 - Monitor closely
+ [MEDIUM] Review power consumption patterns
 
 Week 8 Analysis (995 records)
   VFD Analysis: Current=73.0%, Optimal Range=56.8%-87.2%, Center=72.0%
-  VFD Increase Test: +0.03% improvement
-  VFD Decrease Test: +0.03% improvement
-  VFD Center Optimization: +0.03% improvement
 Production: 93.02 m³/d (-3.9% vs baseline)
-Equipment Health: 74.4/100
+Equipment Health: 85.6/100
 Recommendations:
- [HIGH] Equipment health: 74.4/100 - Schedule inspection
- Best Opportunity: VFD Center Optimization
- Expected Gain: +0.0%
- Recommendation: AVOID
+ [HIGH] Equipment health: 85.6/100 - Schedule inspection
+ [MEDIUM] Review power consumption patterns
 
 COMPARATIVE ANALYSIS
 ==================================================
-Week 1: 96,237.8 → 96,237.8 m³ (+0.0%)
+Week 1: 96.7 → 96.7 m³ (+0.0%)
   Applied: No optimization needed
-Week 2: 96,024.1 → 96,024.1 m³ (+0.0%)
+Week 2: 96.5 → 96.5 m³ (+0.0%)
   Applied: No optimization needed
-Week 3: 93,389.0 → 93,389.0 m³ (+0.0%)
+Week 3: 93.9 → 93.9 m³ (+0.0%)
   Applied: No optimization needed
-Week 4: 95,886.2 → 95,886.2 m³ (+0.0%)
+Week 4: 96.4 → 96.4 m³ (+0.0%)
   Applied: No optimization needed
-Week 5: 95,924.4 → 95,924.4 m³ (+0.0%)
+Week 5: 96.4 → 96.4 m³ (+0.0%)
   Applied: No optimization needed
-Week 6: 95,761.9 → 95,761.9 m³ (+0.0%)
+Week 6: 96.2 → 96.2 m³ (+0.0%)
   Applied: No optimization needed
-Week 7: 95,551.8 → 95,551.8 m³ (+0.0%)
+Week 7: 96.0 → 96.0 m³ (+0.0%)
   Applied: No optimization needed
-Week 8: 92,555.9 → 92,555.9 m³ (+0.0%)
+Week 8: 93.0 → 93.0 m³ (+0.0%)
   Applied: No optimization needed
 
 PERIOD TOTALS:
-Actual: 761,331.0 m³
-Optimized: 761,331.0 m³
-Total Gain: +0.0 m³ (+0.0%)
+Avg Actual Flow Rate: 95.6 m³
+Avg Optimized Flow Rate: 95.6 m³
+Avg Flow Rate Gain: +0.0 m³ (+0.0%)

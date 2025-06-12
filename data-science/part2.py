@@ -39,7 +39,7 @@ class WellOptimizer:
         """
         Calculate equipment health thresholds from high-performance periods
         """
-        high_perf_data = df[df['Liquid_Flow_Rate_m3d'] >= df['Liquid_Flow_Rate_m3d'].quantile(0.90)]
+        high_perf_data = df[df['Liquid_Flow_Rate_m3d'] > df['Liquid_Flow_Rate_m3d'].quantile(0.99)]
         
         self.health_thresholds = {
             'vibration': {
@@ -70,15 +70,15 @@ class WellOptimizer:
         temp_range = self.health_thresholds['temperature']['excellent_max'] - self.health_thresholds['temperature']['excellent_min']
 
         # Penalty rates for Vibration and Temperature variations
-        vib_penalty_rate = 100 / (5 * vib_range)
-        temp_penalty_rate = 100 / (5 * temp_range)
+        vib_penalty_rate = 100 / (20 * vib_range)
+        temp_penalty_rate = 100 / (20 * temp_range)
         
         # Calculate health scores for Vibration and Temperature
         vib_health = df['vibration_composite'].apply(lambda x: health_score(x, self.health_thresholds['vibration'], vib_penalty_rate))
         temp_health = df['Gearbox_Temperature_C'].apply(lambda x: health_score(x, self.health_thresholds['temperature'], temp_penalty_rate))
         
         # Pressure stability
-        high_perf_data = df[df['Liquid_Flow_Rate_m3d'] >= df['Liquid_Flow_Rate_m3d'].quantile(0.90)]
+        high_perf_data = df[df['Liquid_Flow_Rate_m3d'] > df['Liquid_Flow_Rate_m3d'].quantile(0.99)]
         pressure_std = high_perf_data['pressure_differential'].std()
         pressure_penalty_rate = 100 / (5 * pressure_std)
         pressure_mean = df['pressure_differential'].mean()
@@ -86,7 +86,7 @@ class WellOptimizer:
         pressure_health = np.clip(100 - (pressure_deviation * pressure_penalty_rate), 0, 100)
         
         # Combined health score
-        df['Equipment_Health_Score'] = (vib_health * 0.4 + temp_health * 0.4 + pressure_health * 0.2)
+        df['Equipment_Health_Score'] = (vib_health * 0.34 + temp_health * 0.33 + pressure_health * 0.33)
         
         return df
     
@@ -101,7 +101,7 @@ class WellOptimizer:
         train_df = self.calc_equip_health(train_df)
         
         # Calculate baselines
-        is_high_perf = train_df['Liquid_Flow_Rate_m3d'] > train_df['Liquid_Flow_Rate_m3d'].quantile(0.99)
+        is_high_perf = train_df['Liquid_Flow_Rate_m3d'] >= train_df['Liquid_Flow_Rate_m3d'].quantile(0.99)
         self.baseline_metrics = {
             'production_avg': train_df['Liquid_Flow_Rate_m3d'].mean(),
             'production_std': train_df['Liquid_Flow_Rate_m3d'].std(),
@@ -148,6 +148,8 @@ class WellOptimizer:
             'health_critical': self.baseline_metrics['health_avg'] - (1 * self.baseline_metrics['health_std']),
             'vfd_deviation': self.baseline_metrics['baseline_vfd_std'],
             'vfd_critical_deviation': self.baseline_metrics['baseline_vfd_std'] * 2,
+            'efficiency_concerning': self.baseline_metrics['efficiency_avg'] - (0.5 * self.baseline_metrics['efficiency_std']),
+            'efficiency_critical': self.baseline_metrics['efficiency_avg'] - (1 * self.baseline_metrics['efficiency_std']),
             'power_deviation': self.baseline_metrics['baseline_power_std'],
             'meaningful_improvement': (self.baseline_metrics['production_std'] / self.baseline_metrics['production_avg']) * 50
         }
@@ -162,7 +164,7 @@ class WellOptimizer:
         #print('Production vs Baseline Metric: ', metrics['production_vs_baseline'])
         #print('Production Critical Threshold: ', thresholds['production_critical'])
 
-        # Production alerts
+        # Production recommendations
         if metrics['production_vs_baseline'] < thresholds['production_critical']:
             recommendations.append({
                 'priority': 'HIGH',
@@ -176,7 +178,7 @@ class WellOptimizer:
                 'action': f"Production {metrics['production_vs_baseline']:.1f}% below baseline - Consider VFD adjustment"
             })
         
-        # Health alerts
+        # Health recommendations
         if metrics['health_avg'] < thresholds['health_critical']:
             recommendations.append({
                 'priority': 'HIGH',
@@ -190,9 +192,9 @@ class WellOptimizer:
                 'action': f"Equipment health: {metrics['health_avg']:.1f}/100 - Monitor closely"
             })
         
-        # VFD optimization
+        # VFD recommendations
         optimal_vfd_range = self.baseline_metrics['optimal_vfd_range']
-        current_vfd = metrics['avg_vfd_speed']
+        current_vfd = metrics['vfd_speed_avg']
         
         if current_vfd < optimal_vfd_range[0] - thresholds['vfd_critical_deviation']:
             recommendations.append({
@@ -219,17 +221,38 @@ class WellOptimizer:
                 'action': f"Reduce VFD speed from {current_vfd:.1f}% to {optimal_vfd_range[1]:.0f}%"
             })
         
+        # Efficiency recommendations
+        if metrics['efficiency_avg'] < thresholds['efficiency_critical']:
+            recommendations.append({
+                'priority': 'HIGH',
+                'category': 'Efficiency',
+                #'issue': f"Efficiency critically low: {metrics['efficiency_avg']:.2f} vs baseline {self.baseline_metrics['efficiency_avg']:.2f}",
+                'recommendation': 'Immediate investigation of motor and pump efficiency',
+                'action': 'Check for equipment malfunction or severe operating issues'
+            })
+        elif metrics['efficiency_avg'] < thresholds['efficiency_concerning']:
+            recommendations.append({
+                'priority': 'MEDIUM',
+                'category': 'Efficiency',
+                #'issue': f"Efficiency below threshold: {metrics['efficiency_avg']:.2f} vs baseline {self.baseline_metrics['efficiency_avg']:.2f}",
+                'recommendation': 'Optimize motor power settings',
+                'action': 'Review power consumption patterns'
+            })
         return recommendations
     
-    def generate_scenarios(self, weekly_df):
+    def generate_scenarios(self, weekly_df, metrics):
         """
-        Generate what-if scenarios for VFD as its an operator-adjustable parameter to optimize production.
+        Generate what-if scenarios to optimize production.
         """
-        current_vfd = weekly_df['VFD_Speed_pct'].mean()
-        
+        current_production = metrics['production_avg']
+        current_vfd = metrics['vfd_speed_avg']
+        current_efficiency = metrics['efficiency_avg']
+
         thresholds = self.get_thresholds()
         optimal_vfd_range = self.baseline_metrics['optimal_vfd_range']
         optimal_vfd = np.mean(optimal_vfd_range)
+        
+        optimal_power = current_production / self.baseline_metrics['efficiency_avg']
 
         scenarios = []
         print(f"  VFD Analysis: Current={current_vfd:.1f}%, Optimal Range={optimal_vfd_range[0]:.1f}%-{optimal_vfd_range[1]:.1f}%, Center={optimal_vfd:.1f}%")
@@ -278,53 +301,23 @@ class WellOptimizer:
                 'description': f'Reduce VFD from {current_vfd:.1f}% to {optimal_vfd:.1f}% (optimal center)'
             })
 
-        # Check if VFD is outside optimal range (below)
-        elif current_vfd < optimal_vfd_range[0]:
-            scenarios.append({
-                'name': 'VFD Range Correction (Low)',
-                'changes': {'VFD_Speed_pct': optimal_vfd_range[0]},
-                'description': f'Bring VFD into optimal range: {current_vfd:.1f}% → {optimal_vfd_range[0]:.1f}%'
-            })
-            scenarios.append({
-                'name': 'VFD Optimal Center',
-                'changes': {'VFD_Speed_pct': optimal_vfd},
-                'description': f'Move VFD to optimal center: {current_vfd:.1f}% → {optimal_vfd:.1f}%'
-            })
-            
-        # Check if VFD is outside optimal range (above)
-        elif current_vfd > optimal_vfd_range[1]:
-            scenarios.append({
-                'name': 'VFD Range Correction (High)',
-                'changes': {'VFD_Speed_pct': optimal_vfd_range[1]},
-                'description': f'Bring VFD into optimal range: {current_vfd:.1f}% → {optimal_vfd_range[1]:.1f}%'
-            })
-            scenarios.append({
-                'name': 'VFD Optimal Center',
-                'changes': {'VFD_Speed_pct': optimal_vfd},
-                'description': f'Move VFD to optimal center: {current_vfd:.1f}% → {optimal_vfd:.1f}%'
-            })
-        
-        # Always test some VFD adjustments for comparison
-        else:
-            # VFD is within optimal range - test small adjustments
-            scenarios.append({
-                'name': 'VFD Increase Test',
-                'changes': {'VFD_Speed_pct': min(current_vfd + 5, optimal_vfd_range[1])},
-                'description': f'Test VFD increase: {current_vfd:.1f}% → {min(current_vfd + 5, optimal_vfd_range[1]):.1f}%'
-            })
-            scenarios.append({
-                'name': 'VFD Decrease Test', 
-                'changes': {'VFD_Speed_pct': max(current_vfd - 5, optimal_vfd_range[0])},
-                'description': f'Test VFD decrease: {current_vfd:.1f}% → {max(current_vfd - 5, optimal_vfd_range[0]):.1f}%'
-            })
-            
-            # Only add center optimization if significantly different
-            if abs(current_vfd - optimal_vfd) > 0.5:
+        # Efficiency optimization
+        if current_efficiency < (self.baseline_metrics['efficiency_avg'] - thresholds['efficiency_concerning']):
+            if abs(current_power - optimal_power) > thresholds['power_deviation']:
                 scenarios.append({
-                    'name': 'VFD Center Optimization',
-                    'changes': {'VFD_Speed_pct': optimal_vfd},
-                    'description': f'Optimize to center: {current_vfd:.1f}% → {optimal_vfd:.1f}%'
+                    'name': 'Optimize for Efficiency',
+                    'changes': {'Motor_Power_kW': optimal_power},
+                    'description': f'Adjust power to {optimal_power:.1f} kW for optimal efficiency'
                 })
+        
+        # Combined optimization
+        if (abs(current_vfd - optimal_vfd) > thresholds['vfd_deviation'] and 
+            current_efficiency < (self.baseline_metrics['efficiency_avg'] - thresholds['efficiency_concerning'])):
+            scenarios.append({
+                'name': 'Combined Optimization',
+                'changes': {'VFD_Speed_pct': optimal_vfd, 'Motor_Power_kW': optimal_power},
+                'description': 'Optimize both VFD and power to historical best practices'
+            })
         
         # Predict scenario outcomes
         features = ['VFD_Speed_pct', 'Motor_Power_kW', 'Stroke_Count_Today', 'Hydraulic_Pressure_psi', 
@@ -357,19 +350,12 @@ class WellOptimizer:
             if 'Critical' in scenario_name:
                 # Critical scenarios always get IMPLEMENTED regardless of improvement
                 recommendation = 'IMPLEMENT'
-            elif 'Test' in scenario_name:
-                # Test scenarios get special treatment
-                if improvement > 0.1:  # Very low threshold for tests
-                    recommendation = 'MONITOR'
-                else:
-                    recommendation = 'AVOID'
             elif improvement > thresholds['meaningful_improvement']:
                 recommendation = 'IMPLEMENT'
-            elif improvement > 0.1:  # Lower threshold than before
+            elif improvement > 0.01:  # Lower threshold than before
                 recommendation = 'MONITOR'
             else:
                 recommendation = 'AVOID'
-            
             
             scenario_results.append({
                 'scenario': scenario['name'],
@@ -388,19 +374,20 @@ class WellOptimizer:
         weekly_df = self.prepare_features(week_data)
         weekly_df = self.calc_equip_health(weekly_df)
         
-        # Calculate metrics
+        # Calculate current metrics
         metrics = {
             'week_number': week_number,
             'production_avg': weekly_df['Liquid_Flow_Rate_m3d'].mean(),
             'production_vs_baseline': ((weekly_df['Liquid_Flow_Rate_m3d'].mean() - self.baseline_metrics['production_avg']) / self.baseline_metrics['production_avg'] * 100),
             'health_avg': weekly_df['Equipment_Health_Score'].mean(),
-            'avg_vfd_speed': weekly_df['VFD_Speed_pct'].mean(),
-            'avg_motor_power': weekly_df['Motor_Power_kW'].mean()
+            'vfd_speed_avg': weekly_df['VFD_Speed_pct'].mean(),
+            'efficiency_avg': weekly_df['efficiency_ratio'].mean(),
+            'motor_power_avg': weekly_df['Motor_Power_kW'].mean()
         }
         
         # Generate recommendations and scenarios
         recommendations = self.generate_recommendations(weekly_df, metrics)
-        scenarios = self.generate_scenarios(weekly_df)
+        scenarios = self.generate_scenarios(weekly_df, metrics)
         
         weekly_report = {
             'metrics': metrics,
@@ -462,16 +449,6 @@ class WellOptimizer:
                 print(f" Best Opportunity: {best_scenario['scenario']}")
                 print(f" Expected Gain: +{best_scenario['improvement_pct']:.1f}%")
                 print(f" Recommendation: {best_scenario['recommendation']}")
-            else:
-                # Debug info when no scenarios are generated
-                current_vfd = metrics['avg_vfd_speed']
-                optimal_range = self.baseline_metrics['optimal_vfd_range']
-                optimal_center = np.mean(optimal_range)
-                vfd_deviation = week_data['VFD_Speed_pct'].std()
-                
-                print(f"  No scenarios generated:")
-                print(f"   Current VFD: {current_vfd:.1f}% | Optimal Range: {optimal_range[0]:.1f}%-{optimal_range[1]:.1f}% | Center: {optimal_center:.1f}%")
-                print(f"   VFD Deviation Threshold: {vfd_deviation:.1f}% | Distance from center: {abs(current_vfd - optimal_center):.1f}%")
         
         return self.weekly_reports
     
@@ -485,12 +462,12 @@ class WellOptimizer:
         print(f"\nCOMPARATIVE ANALYSIS")
         print("=" * 50)
         
-        total_actual = 0
-        total_optimized = 0
+        actual_rates = []
+        optimized_rates = []
         
         for week_num, report in enumerate(self.weekly_reports, 1):
             week_data = report['data']
-            actual_production = week_data['Liquid_Flow_Rate_m3d'].sum()
+            actual_production_rate = week_data['Liquid_Flow_Rate_m3d'].mean()
             
             # Find best implementable scenario
             implementable = [s for s in report['scenarios'] if s['recommendation'] == 'IMPLEMENT']
@@ -498,35 +475,31 @@ class WellOptimizer:
             if implementable:
                 best_scenario = max(implementable, key=lambda x: x['improvement_pct'])
                 improvement_factor = 1 + (best_scenario['improvement_pct'] / 100)
-                optimized_production = actual_production * improvement_factor
+                optimized_production_rate = actual_production_rate * improvement_factor
                 scenario_name = best_scenario['scenario']
             else:
-                optimized_production = actual_production
+                optimized_production_rate = actual_production_rate
                 scenario_name = "No optimization needed"
             
-            gain = optimized_production - actual_production
-            gain_pct = (gain / actual_production) * 100
+            gain = optimized_production_rate - actual_production_rate
+            gain_pct = (gain / actual_production_rate) * 100
             
-            print(f"Week {week_num}: {actual_production:,.1f} → {optimized_production:,.1f} m³ ({gain_pct:+.1f}%)")
+            print(f"Week {week_num}: {actual_production_rate:,.1f} → {optimized_production_rate:,.1f} m³ ({gain_pct:+.1f}%)")
             print(f"  Applied: {scenario_name}")
             
-            total_actual += actual_production
-            total_optimized += optimized_production
+            actual_rates.append(actual_production_rate)
+            optimized_rates.append(optimized_production_rate)
         
-        total_gain = total_optimized - total_actual
-        total_gain_pct = (total_gain / total_actual) * 100
+        avg_actual_rate = sum(actual_rates)/len(actual_rates)
+        avg_optimized_rate = sum(optimized_rates)/len(optimized_rates)
+
+        avg_gain_rate = (avg_optimized_rate - avg_optimized_rate)
+        avg_gain_pct = (avg_gain_rate / avg_actual_rate) * 100
         
         print(f"\nPERIOD TOTALS:")
-        print(f"Actual: {total_actual:,.1f} m³")
-        print(f"Optimized: {total_optimized:,.1f} m³")
-        print(f"Total Gain: {total_gain:+,.1f} m³ ({total_gain_pct:+.1f}%)")
-        
-        return {
-            'actual_total': total_actual,
-            'optimized_total': total_optimized,
-            'total_gain': total_gain,
-            'improvement_pct': total_gain_pct
-        }
+        print(f"Avg Actual Flow Rate: {avg_actual_rate:,.1f} m³")
+        print(f"Avg Optimized Flow Rate: {avg_optimized_rate:,.1f} m³")
+        print(f"Avg Flow Rate Gain: {avg_gain_rate:+,.1f} m³ ({avg_gain_pct:+.1f}%)")
 
 if __name__ == "__main__":
     
